@@ -1,18 +1,13 @@
 #include "drum.h"
 
-
-
 Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
     AnalogRead=0;
-    NextAnalogRead=0;
-    Velocity=0;
-    ActiveHit=0;
     HitStartTime=0;
     TimeSinceHit=0;  
     AnalogInputNumber=AnalogReadPin;
     MidiAddress=NoteAddress;
+    CurrentState=IDLE;
 }
-
 
 void Drum::SendMidi(int MidiCommand, int NoteAddress, int NoteVelocity ) {
   Serial.write(MidiCommand);
@@ -20,41 +15,57 @@ void Drum::SendMidi(int MidiCommand, int NoteAddress, int NoteVelocity ) {
   Serial.write(NoteVelocity);
 }
 
-
-int Drum::ADCToVelocity(int AnalogRead){
+int Drum::ADCToVelocity(int AnalogReadIn){
   
   int Velocity;
-
-  Velocity=(AnalogRead*(unsigned long)127)/(unsigned long)1023;
+  
+  Velocity=(AnalogReadIn*(unsigned long)127)/(unsigned long)1023;
   return Velocity;
 }
 
 
 void Drum::CheckHits(void){
   
+  int Velocity, NextAnalogRead;
   AnalogRead = analogRead(AnalogInputNumber);
   
-  if ( AnalogRead>THRESHOLD) { 
-    ActiveHit=1;
-  }
-  else{}
-  
-  if( (ActiveHit==1) && (HitStartTime==0) ){
-    HitStartTime=millis();
-    while(millis()-HitStartTime <= NOTE_BUFFER_TIME){//change to not stay in while
-      NextAnalogRead=analogRead(AnalogInputNumber);
-      if(NextAnalogRead>AnalogRead){
-        AnalogRead=NextAnalogRead;
-      }
+
+  switch(CurrentState){
+  case IDLE:
+    if(AnalogRead>THRESHOLD){
+      HitStartTime=millis();
+      CurrentState=SEND_NOTE_ON;
     }
-    //Serial.println(AnalogRead);
+    break;
+  case WAIT_FOR_MAX:
+    TimeSinceHit=millis()-HitStartTime;
+    NextAnalogRead=analogRead(AnalogInputNumber);
+    if(NextAnalogRead>AnalogRead){
+      AnalogRead=NextAnalogRead;
+    }
+    if(TimeSinceHit >= NOTE_BUFFER_TIME){
+      CurrentState=SEND_NOTE_ON;
+    }
+    break;
+  case SEND_NOTE_ON:
+    //Serial.println(AnalogRead); //debug
     Velocity=ADCToVelocity(AnalogRead);
     SendMidi(NOTE_ON, MidiAddress, Velocity); 
-  }
-  else if( millis()-HitStartTime >= NOTE_LENGTH ){
+    CurrentState=BLOCK;
+    break;
+  case BLOCK:
+    TimeSinceHit=millis()-HitStartTime;
+    if(TimeSinceHit>=NOTE_LENGTH){
+      CurrentState=SEND_NOTE_OFF;
+    }
+    break;
+  case SEND_NOTE_OFF:
     SendMidi(NOTE_OFF, MidiAddress, 0);
-    HitStartTime=0;
-    ActiveHit=0;
-    Velocity=0;
-  }  
+    HitStartTime=0; 
+    CurrentState=IDLE;
+    break;
+  default:
+    CurrentState=IDLE;
+    break;
+  }
 }

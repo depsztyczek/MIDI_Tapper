@@ -3,13 +3,21 @@
 
 #include "Arduino.h"
 
+//MIDI addresses
 #define SNARE_ADDRESS 26
 #define HIHAT_ADDRESS 42
+#define KICK_ADDRESS 24
+#define FLOOR_ADDRESS 35
+#define CRASH_ADDRESS 52
+
+//MIDI commands
 #define NOTE_ON (0x90)
 #define NOTE_OFF (0x80)
-#define NOTE_BUFFER_TIME 5 //in miliseconds
+
+//Control
+#define NOTE_BUFFER_TIME 1 //in miliseconds
 #define NOTE_LENGTH 65 // in miliseconds
-#define THRESHOLD 20
+#define THRESHOLD 20   // in ADC value - 0-1023
 
 class Drum{
 	
@@ -18,14 +26,13 @@ class Drum{
     void CheckHits(void);
     void SendMidi(int Command, int NoteAddress, int NoteVelocity);
     
-   // private:
+    private:
+    enum DrumState{IDLE,WAIT_FOR_MAX,SEND_NOTE_ON,BLOCK,SEND_NOTE_OFF};
+    DrumState CurrentState;
     int AnalogInputNumber;
     int MidiAddress;
     int ADCToVelocity(int ADCRead);
     int AnalogRead;
-    int NextAnalogRead;
-    int Velocity;
-    bool ActiveHit;
     unsigned long HitStartTime;
     unsigned long TimeSinceHit;      
 };
