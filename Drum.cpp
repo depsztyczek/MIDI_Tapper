@@ -6,7 +6,7 @@ Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
     TimeSinceHit=0;  
     AnalogInputNumber=AnalogReadPin;
     MidiAddress=NoteAddress;
-    CurrentState=IDLE;
+    NextState=IDLE;
 }
 
 void Drum::SendMidi(int MidiCommand, int NoteAddress, int NoteVelocity ) {
@@ -34,7 +34,7 @@ void Drum::CheckHits(void){
   case IDLE:
     if(AnalogRead>THRESHOLD){
       HitStartTime=millis();
-      CurrentState=SEND_NOTE_ON;
+      NextState=SEND_NOTE_ON;
     }
     break;
   case WAIT_FOR_MAX:
@@ -44,28 +44,28 @@ void Drum::CheckHits(void){
       AnalogRead=NextAnalogRead;
     }
     if(TimeSinceHit >= NOTE_BUFFER_TIME){
-      CurrentState=SEND_NOTE_ON;
+      NextState=SEND_NOTE_ON;
     }
     break;
   case SEND_NOTE_ON:
     //Serial.println(AnalogRead); //debug
     Velocity=ADCToVelocity(AnalogRead);
     SendMidi(NOTE_ON, MidiAddress, Velocity); 
-    CurrentState=BLOCK;
+    NextState=BLOCK;
     break;
   case BLOCK:
     TimeSinceHit=millis()-HitStartTime;
     if(TimeSinceHit>=NOTE_LENGTH){
-      CurrentState=SEND_NOTE_OFF;
+      NextState=SEND_NOTE_OFF;
     }
     break;
   case SEND_NOTE_OFF:
     SendMidi(NOTE_OFF, MidiAddress, 0);
     HitStartTime=0; 
-    CurrentState=IDLE;
+    NextState=IDLE;
     break;
   default:
-    CurrentState=IDLE;
+    NextState=IDLE;
     break;
   }
 }
