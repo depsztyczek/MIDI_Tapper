@@ -28,7 +28,7 @@ class Drum{
     
     private:
     enum DrumState{IDLE,WAIT_FOR_MAX,SEND_NOTE_ON,BLOCK,SEND_NOTE_OFF};
-    DrumState CurrentState;
+    DrumState NextState;
     int AnalogInputNumber;
     int MidiAddress;
     int ADCToVelocity(int ADCRead);
