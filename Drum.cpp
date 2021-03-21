@@ -19,7 +19,8 @@ int Drum::ADCToVelocity(int AnalogReadIn){
   
   int Velocity;
   
-  Velocity=(AnalogReadIn*(unsigned long)127)/(unsigned long)1023;
+  //Velocity=(AnalogReadIn*(unsigned long)127)/(unsigned long)1023;
+  Velocity=((float)32.277*log(AnalogReadIn)-(float)96.692); // for THRESHOLD = 20 
   return Velocity;
 }
 
