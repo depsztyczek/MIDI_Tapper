@@ -18,6 +18,7 @@
 #define NOTE_BUFFER_TIME 1 //in miliseconds
 #define NOTE_LENGTH 65 // in miliseconds
 #define THRESHOLD 20   // in ADC value - 0-1023
+#define MAX_VELOCITY 127
 
 class Drum{
 	
@@ -25,10 +26,12 @@ class Drum{
     Drum(int AnalogInputNumber=A4, int MidiAddress=SNARE_ADDRESS);
     void CheckHits(void);
     void SendMidi(int Command, int NoteAddress, int NoteVelocity);
+    void SetSensitivity(unsigned char SensitivityIn);
     
-    private:
+  private:
     enum DrumState{IDLE,WAIT_FOR_MAX,SEND_NOTE_ON,BLOCK,SEND_NOTE_OFF};
     DrumState CurrentState;
+    static unsigned char ADCToVelConv[1024];
     int AnalogInputNumber;
     int MidiAddress;
     int ADCToVelocity(int ADCRead);
