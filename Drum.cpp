@@ -5,15 +5,16 @@ Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
     AnalogRead=0;
     HitStartTime=0;
     TimeSinceHit=0;  
+    HighestRead=0;
     AnalogInputNumber=AnalogReadPin;
     MidiAddress=NoteAddress;
-    CurrentState=IDLE;
+    State=IDLE;
 }
 
-//new features, not tested: Generating ADCtoVelocity conversion table, adding it to class elements
+//new features:Added setting up sensitivity, generating a logarithmic LUT, using the LUT inside ADCToVelocity, add HighestRead
 //i will be passing the array through a pointer, not sure if this will work
- 
-void Drum::SetSensitivity(unsigned char SensitivityIn){//Sensitivity takes values from 1-10, 1 is the least sensitive
+
+void SetSensitivity(unsigned char SensitivityIn){//Sensitivity takes values from 1-10, 1 is the least sensitive
   
   unsigned int ADC_IN;
   const float ScalingFactor=18.5;
@@ -48,45 +49,45 @@ int Drum::ADCToVelocity(int AnalogReadIn){
 
 void Drum::CheckHits(void){
   
-  int Velocity, NextAnalogRead;
+  int Velocity;
   AnalogRead = analogRead(AnalogInputNumber);
   
-  switch(CurrentState){
+  switch(State){
   case IDLE:
     if(AnalogRead>THRESHOLD){
       HitStartTime=millis();
-      CurrentState=WAIT_FOR_MAX;
+      State=WAIT_FOR_MAX;
     }
     break;
   case WAIT_FOR_MAX:
     TimeSinceHit=millis()-HitStartTime;
-    NextAnalogRead=analogRead(AnalogInputNumber);
-    if(NextAnalogRead>AnalogRead){
-      AnalogRead=NextAnalogRead;
+    if(AnalogRead>HighestRead){
+      HighestRead=AnalogRead;
     }
     if(TimeSinceHit >= NOTE_BUFFER_TIME){
-      CurrentState=SEND_NOTE_ON;
+      State=SEND_NOTE_ON;
     }
     break;
   case SEND_NOTE_ON:
     //Serial.println(AnalogRead); //debug
-    Velocity=ADCToVelocity(AnalogRead);
+    Velocity=ADCToVelocity(HighestRead);
     SendMidi(NOTE_ON, MidiAddress, Velocity); 
-    CurrentState=BLOCK;
+    State=BLOCK;
     break;
   case BLOCK:
     TimeSinceHit=millis()-HitStartTime;
     if(TimeSinceHit>=NOTE_LENGTH){
-      CurrentState=SEND_NOTE_OFF;
+      State=SEND_NOTE_OFF;
     }
     break;
   case SEND_NOTE_OFF:
     SendMidi(NOTE_OFF, MidiAddress, 0);
     HitStartTime=0; 
-    CurrentState=IDLE;
+    HighestRead=0;
+    State=IDLE;
     break;
   default:
-    CurrentState=IDLE;
+    State=IDLE;
     break;
   }
 }

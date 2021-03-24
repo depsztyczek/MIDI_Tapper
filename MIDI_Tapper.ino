@@ -5,9 +5,13 @@ Drum MyHihat(A4,HIHAT_ADDRESS);
 
 void setup() {
   Serial.begin(115200);
-  MySnare.SetSensitivity(1);
+  
 }
 
 void loop() {    
-    MySnare.CheckHits();
-}
+    SetSensitivity(1);
+    while(1){
+      MySnare.CheckHits();
+    }
+    
+} 

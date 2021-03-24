@@ -25,19 +25,20 @@ class Drum{
   public:   
     Drum(int AnalogInputNumber=A4, int MidiAddress=SNARE_ADDRESS);
     void CheckHits(void);
-    void SendMidi(int Command, int NoteAddress, int NoteVelocity);
-    void SetSensitivity(unsigned char SensitivityIn);
-    
+    void SendMidi(int Command, int NoteAddress, int NoteVelocity); 
   private:
     enum DrumState{IDLE,WAIT_FOR_MAX,SEND_NOTE_ON,BLOCK,SEND_NOTE_OFF};
-    DrumState CurrentState;
-    static unsigned char ADCToVelConv[1024];
+    DrumState State;
     int AnalogInputNumber;
     int MidiAddress;
     int ADCToVelocity(int ADCRead);
     int AnalogRead;
+    int HighestRead;
     unsigned long HitStartTime;
     unsigned long TimeSinceHit;      
 };
+
+static unsigned char ADCToVelConv[1024]; 
+void SetSensitivity(unsigned char SensitivityIn); 
 
 #endif
