@@ -17,15 +17,16 @@ Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
 void SetSensitivity(unsigned char SensitivityIn){//Sensitivity takes values from 1-10, 1 is the least sensitive
   
   unsigned int ADC_IN;
-  const float ScalingFactor=18.5;
-  float Sensitivity=0.5*SensitivityIn+0.5;
-  
-  for(ADC_IN=0 ; ADC_IN<1023 ; ADC_IN++){  
-    if( ADC_IN < THRESHOLD ){
+  float Sensitivity;
+
+  Sensitivity=0.5*SensitivityIn+0.5;//scale sensitivity
+  for(ADC_IN=0 ; ADC_IN<1024 ; ADC_IN++){  
+    if( ADC_IN <= THRESHOLD ){
       ADCToVelConv[ADC_IN]=0;
     }
     else{
-      ADCToVelConv[ADC_IN]= ScalingFactor * log( (double)(ADC_IN-THRESHOLD) / (double)(Sensitivity) ); 
+      //all the constants below are used so that the logarithm for sensitivity=1 crosses the ADC_IN axis close to ADC_IN=20 and vel=127 for ADC_IN~1000
+      ADCToVelConv[ADC_IN]= 32.277 * Sensitivity * log( (double)(ADC_IN+20-THRESHOLD))-96.692*Sensitivity; 
       if(ADCToVelConv[ADC_IN] > MAX_VELOCITY){
         ADCToVelConv[ADC_IN] = MAX_VELOCITY;
       }

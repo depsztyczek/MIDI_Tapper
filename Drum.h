@@ -16,7 +16,7 @@
 
 //Control
 #define NOTE_BUFFER_TIME 1 //in miliseconds
-#define NOTE_LENGTH 65 // in miliseconds
+#define NOTE_LENGTH 60 // in miliseconds
 #define THRESHOLD 20   // in ADC value - 0-1023
 #define MAX_VELOCITY 127
 
@@ -40,5 +40,6 @@ class Drum{
 
 static unsigned char ADCToVelConv[1024]; 
 void SetSensitivity(unsigned char SensitivityIn); 
+//enum ResponseTypes{logarithmic, linear};
 
 #endif
