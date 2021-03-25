@@ -20,6 +20,10 @@
 #define THRESHOLD 20   // in ADC value - 0-1023
 #define MAX_VELOCITY 127
 
+static unsigned char ADCToVelConv[1024]; 
+enum ResponseType{logarithmic, linear};
+void SetSensitivity(unsigned char SensitivityIn, ResponseType Type); 
+
 class Drum{
 	
   public:   
@@ -37,9 +41,5 @@ class Drum{
     unsigned long HitStartTime;
     unsigned long TimeSinceHit;      
 };
-
-static unsigned char ADCToVelConv[1024]; 
-void SetSensitivity(unsigned char SensitivityIn); 
-//enum ResponseTypes{logarithmic, linear};
 
 #endif

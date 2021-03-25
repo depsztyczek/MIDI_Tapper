@@ -9,7 +9,7 @@ void setup() {
 }
 
 void loop() {    
-    SetSensitivity(1);
+    SetSensitivity(1,logarithmic); //SetSensitivity('value from 1-10', 'linear'/'logarithmic')
     while(1){
       MySnare.CheckHits();
     }

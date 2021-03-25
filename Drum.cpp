@@ -11,26 +11,40 @@ Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
     State=IDLE;
 }
 
-//new features:Added setting up sensitivity, generating a logarithmic LUT, using the LUT inside ADCToVelocity, add HighestRead
-//i will be passing the array through a pointer, not sure if this will work
-
-void SetSensitivity(unsigned char SensitivityIn){//Sensitivity takes values from 1-10, 1 is the least sensitive
+void SetSensitivity(unsigned char SensitivityIn, ResponseType Type){//Sensitivity takes values from 1-10, 1 is the least sensitive
   
   unsigned int ADC_IN;
   float Sensitivity;
-
-  Sensitivity=0.5*SensitivityIn+0.5;//scale sensitivity
-  for(ADC_IN=0 ; ADC_IN<1024 ; ADC_IN++){  
-    if( ADC_IN <= THRESHOLD ){
-      ADCToVelConv[ADC_IN]=0;
-    }
-    else{
-      //all the constants below are used so that the logarithm for sensitivity=1 crosses the ADC_IN axis close to ADC_IN=20 and vel=127 for ADC_IN~1000
-      ADCToVelConv[ADC_IN]= 32.277 * Sensitivity * log( (double)(ADC_IN+20-THRESHOLD))-96.692*Sensitivity; 
-      if(ADCToVelConv[ADC_IN] > MAX_VELOCITY){
-        ADCToVelConv[ADC_IN] = MAX_VELOCITY;
+  switch(Type){
+    case logarithmic:
+      Sensitivity=0.111*SensitivityIn+0.888;//scale sensitivity for current response type
+      for(ADC_IN=0 ; ADC_IN<1024 ; ADC_IN++){  
+        if( ADC_IN <= THRESHOLD ){
+          ADCToVelConv[ADC_IN]=0;
+        }
+        else{
+          //all the constants below are used so that the logarithm for sensitivity=1 crosses the ADC_IN axis close to ADC_IN=20 and vel=127 for ADC_IN~1000
+          ADCToVelConv[ADC_IN]= 32.277 * Sensitivity * log( (double)(ADC_IN+20-THRESHOLD))-96.692*Sensitivity; 
+          if(ADCToVelConv[ADC_IN] > MAX_VELOCITY){
+            ADCToVelConv[ADC_IN] = MAX_VELOCITY;
+          }
+        }
       }
-    }
+      break;
+    case linear:
+      Sensitivity=0.333*SensitivityIn+0.666;//scale sensitivity for current response type
+      for(ADC_IN=0 ; ADC_IN<1024 ; ADC_IN++){
+        if( ADC_IN <= THRESHOLD ){
+          ADCToVelConv[ADC_IN]=0;
+        }
+        else{
+          ADCToVelConv[ADC_IN]=Sensitivity*MAX_VELOCITY*(ADC_IN-THRESHOLD)/(1023-THRESHOLD);
+          if(ADCToVelConv[ADC_IN] > MAX_VELOCITY){
+            ADCToVelConv[ADC_IN] = MAX_VELOCITY;
+          }
+        }
+      }
+      break;
   }
 }
 
