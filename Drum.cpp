@@ -15,6 +15,7 @@ void SetSensitivity(unsigned char SensitivityIn, ResponseType Type){//Sensitivit
   
   unsigned int ADC_IN;
   float Sensitivity;
+  unsigned int ADCCalcValue;
   switch(Type){
     case logarithmic:
       Sensitivity=0.111*SensitivityIn+0.888;//scale sensitivity for current response type
@@ -38,12 +39,17 @@ void SetSensitivity(unsigned char SensitivityIn, ResponseType Type){//Sensitivit
           ADCToVelConv[ADC_IN]=0;
         }
         else{
-          ADCToVelConv[ADC_IN]=Sensitivity*MAX_VELOCITY*(ADC_IN-THRESHOLD)/(1023-THRESHOLD);
-          if(ADCToVelConv[ADC_IN] > MAX_VELOCITY){
+          ADCCalcValue = Sensitivity*MAX_VELOCITY*(ADC_IN-THRESHOLD)/(1023-THRESHOLD);
+          if(ADCCalcValue > MAX_VELOCITY){
             ADCToVelConv[ADC_IN] = MAX_VELOCITY;
+          }
+          else{
+            ADCToVelConv[ADC_IN] = ADCCalcValue;
           }
         }
       }
+      break;
+    default:
       break;
   }
 }
