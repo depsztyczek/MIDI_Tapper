@@ -1,5 +1,6 @@
 #include "drum.h"
 #include "math.h"
+#include "MIDIUSB.h"
 
 Drum::Drum(int AnalogReadPin=A4, int NoteAddress=SNARE_ADDRESS) {
     AnalogRead=0;
@@ -54,10 +55,21 @@ void SetSensitivity(unsigned char SensitivityIn, ResponseType Type){//Sensitivit
   }
 }
 
-void Drum::SendMidi(int MidiCommand, int NoteAddress, int NoteVelocity ) {
-  Serial.write(MidiCommand);
-  Serial.write(NoteAddress);
-  Serial.write(NoteVelocity);
+void Drum::SendMidi(NoteMode MidiCommand, int NoteAddress, int NoteVelocity ) {
+  
+  switch(MidiCommand){
+    case noteOn:
+      midiEventPacket_t noteON = {0x09, 0x90, NoteAddress, NoteVelocity};
+      MidiUSB.sendMIDI(noteON);
+      break;
+    case noteOff:
+      midiEventPacket_t noteOFF = {0x08, 0x80, NoteAddress, NoteVelocity};
+      MidiUSB.sendMIDI(noteOFF);
+      break;
+    default:
+      break;
+  }
+  MidiUSB.flush();
 }
 
 int Drum::ADCToVelocity(int AnalogReadIn){
@@ -92,7 +104,7 @@ void Drum::CheckHits(void){
   case SEND_NOTE_ON:
     //Serial.println(AnalogRead); //debug
     Velocity=ADCToVelocity(HighestRead);
-    SendMidi(NOTE_ON, MidiAddress, Velocity); 
+    SendMidi(noteOn, MidiAddress, Velocity); 
     State=BLOCK;
     break;
   case BLOCK:
@@ -102,7 +114,7 @@ void Drum::CheckHits(void){
     }
     break;
   case SEND_NOTE_OFF:
-    SendMidi(NOTE_OFF, MidiAddress, 0);
+    SendMidi(noteOff, MidiAddress, 0);
     HitStartTime=0; 
     HighestRead=0;
     State=IDLE;

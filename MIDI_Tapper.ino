@@ -1,7 +1,7 @@
 #include "Drum.h"
 
-Drum MySnare(A5,SNARE_ADDRESS);
-Drum MyHihat(A4,HIHAT_ADDRESS);
+Drum MySnare(A1,SNARE_ADDRESS);
+Drum MyHihat(A0,HIHAT_ADDRESS);
 
 void setup() {
   Serial.begin(115200);
